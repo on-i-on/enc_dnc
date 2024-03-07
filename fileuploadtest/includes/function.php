@@ -21,7 +21,7 @@ function uploadFile()
         $fileType = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
         // Allow only specific text file extensions (modify as needed)
-        $allowedExtensions = array("txt", "csv", "md", "html", "php", "js", "css", "json");
+        $allowedExtensions = array("txt", "csv", "md", "html", "php", "js", "css", "pdf");
         if (!in_array($fileType, $allowedExtensions)) {
             echo "<script>alert('Error: Only " . implode(", ", $allowedExtensions) . " files are allowed.');</script>";
             exit; // Terminate script execution
