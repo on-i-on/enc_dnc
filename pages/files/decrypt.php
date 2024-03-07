@@ -43,9 +43,10 @@ function decryptFile($conn, $file_id, $shift)
         file_put_contents($decrypted_file_path, $decrypted_content);
 
         // Store decrypted file details in the database
+        // Store decrypted file details in the database
+        $insert_query = "INSERT INTO decrypted_files (userid, file_name, file_path, password, upload_date, fileid) VALUES ($1, $2, $3, $4, NOW(), $5)";
+        $insert_result = pg_query_params($conn, $insert_query, array($user_id, $decrypted_file_name, $decrypted_file_path, $shift, $file_id));
 
-        $insert_query = "INSERT INTO decrypted_files (userid, fileid, file_name, file_path, password, upload_date) VALUES ($1, $2, $3, $4, $5, $6, NOW())";
-        $insert_result = pg_query_params($conn, $insert_query, array($user_id, $file_id, $decrypted_file_name, $decrypted_file_path, $shift));
         if ($insert_result) {
             // Redirect to download.php with the file_id and table parameters
             header("Location: download.php?file_id=$file_id&table=decrypted_files");
