@@ -33,12 +33,18 @@ function uploadFile()
 
         // Check if a file with the same name and user ID exists in the database
         global $conn; // Access the database connection globally
-        $query = "SELECT * FROM files WHERE file_name = $1 AND userid = $2";
+        $fileName = $_FILES["fileToUpload"]["name"];
+
+        // Determine the correct table based on the file name
+        $tableName = strpos($fileName, '_en') !== false ? 'externally_encrypted_files' : 'files';
+
+        // Check for existing file in the determined table
+        $query = "SELECT * FROM $tableName WHERE file_name = $1 AND userid = $2";
         $params = array($fileName, $userid);
         $result = pg_query_params($conn, $query, $params);
 
         if (pg_num_rows($result) > 0) {
-            echo "<script>alert('Error: A file with the same name and user already exists in the database.');</script>";
+            echo "<script>alert('Error: A file with the same name already exists.');</script>";
             exit; // Terminate script execution
         }
 
@@ -52,19 +58,16 @@ function uploadFile()
             // Get the current date and time
             $uploadDate = date('Y-m-d H:i:s');
 
-            // Store the file details in the database
-            $query = "INSERT INTO files (userid, file_name, file_path, upload_date) VALUES ($1, $2, $3, $4)";
+            // Store the file details in the determined table
+            $query = "INSERT INTO $tableName (userid, file_name, file_path, upload_date) VALUES ($1, $2, $3, $4)";
             $params = array($userid, $fileName, $filePath, $uploadDate);
             pg_query_params($conn, $query, $params);
 
-            // Redirect to another page if needed
+            // Redirect or additional logic as needed...
 
         } else {
             echo "<script>alert('Error: An error occurred while uploading the file.');</script>";
         }
-    } else {
-        // Display basic instructions if no form submission occurred
-        echo "Select a text file (.txt, .csv, .md, etc.) to upload:";
     }
 }
 
