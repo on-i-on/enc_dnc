@@ -12,14 +12,14 @@ if (!isset($_SESSION['user_id'])) {
 // Include database connection
 include_once "../../connection.php";
 
-// Function to decrypt the file
-function decryptFile($conn, $file_id, $shift)
+// Modified decryptFile function to accept table name as a parameter
+function decryptFile($conn, $file_id, $shift, $tableName)
 {
     // Get the user ID from the session
     $user_id = $_SESSION['user_id'];
 
-    // Fetch encrypted file details
-    $query = "SELECT file_name, file_path FROM encrypted_files WHERE fileid = $1 AND userid = $2";
+    // Fetch encrypted file details from the specified table
+    $query = "SELECT file_name, file_path FROM $tableName WHERE fileid = $1 AND userid = $2";
     $result = pg_query_params($conn, $query, array($file_id, $user_id));
     if ($result && pg_num_rows($result) > 0) {
         $row = pg_fetch_assoc($result);
@@ -43,9 +43,8 @@ function decryptFile($conn, $file_id, $shift)
         file_put_contents($decrypted_file_path, $decrypted_content);
 
         // Store decrypted file details in the database
-        // Store decrypted file details in the database
-        $insert_query = "INSERT INTO decrypted_files (userid, file_name, file_path, password, upload_date, fileid) VALUES ($1, $2, $3, $4, NOW(), $5)";
-        $insert_result = pg_query_params($conn, $insert_query, array($user_id, $decrypted_file_name, $decrypted_file_path, $shift, $file_id));
+        $insert_query = "INSERT INTO decrypted_files (userid, file_name, file_path, password, upload_date) VALUES ($1, $2, $3, $4, NOW())";
+        $insert_result = pg_query_params($conn, $insert_query, array($user_id, $decrypted_file_name, $decrypted_file_path, $shift));
 
         if ($insert_result) {
             // Redirect to download.php with the file_id and table parameters
@@ -80,7 +79,9 @@ function decryptString($ciphertext, $shift)
 if (isset($_POST['decrypt_file']) && isset($_POST['shift'])) {
     $file_id = $_POST['file_id'];
     $shift = $_POST['shift']; // Retrieve the shift value from the form
-    decryptFile($conn, $file_id, $shift);
+    // Assume tableName is also passed from the form or determined by some logic
+    $tableName = isset($_POST['table_name']) ? $_POST['table_name'] : 'encrypted_files'; // Default to encrypted_files
+    decryptFile($conn, $file_id, $shift, $tableName);
 }
 ?>
 
@@ -97,6 +98,8 @@ if (isset($_POST['decrypt_file']) && isset($_POST['shift'])) {
     <h2>Decrypt File</h2>
     <form method="post">
         <input type="hidden" name="file_id" value="<?php echo isset($_GET['file_id']) ? $_GET['file_id'] : ''; ?>" />
+        <input type="hidden" name="table_name"
+            value="<?php echo isset($_GET['table_name']) ? $_GET['table_name'] : 'encrypted_files'; ?>" />
         Shift (1-9): <input type="number" name="shift" min="1" max="9" required /><br><br>
         <button type="submit" name="decrypt_file">Decrypt File</button>
     </form>

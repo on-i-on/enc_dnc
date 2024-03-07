@@ -91,17 +91,32 @@ function displayFiles($conn, $table)
             echo "<td style='text-align:center;'>{$row['file_name']}</td>";
             echo "<td style='text-align:center;'>";
 
+            // Display different action buttons based on the table
             if ($table === 'files') {
+                // For files table, display Encrypt button
                 echo "<form method='post' action='encrypt.php' style='display:inline-block;'>
                             <input type='hidden' name='file_id' value='{$row['fileid']}' />
                              <button type='submit' name='encrypt_file'>Encrypt</button>
                         </form>";
-            } elseif ($table == 'decrypted_files') {
-                echo "<form method='get' action='delete.php' style='display:inline-block;'>";
+            } elseif ($table === 'decrypted_files') {
+                // For decrypted_files table, display Decrypt and Download buttons
+                echo "<form method='post' action='delete.php' style='display:inline-block;'>
+                        <input type='hidden' name='file_id' value='{$row['fileid']}' />
+                        <input type='hidden' name='table_name' value='{$table}' />
+                        <button type='submit' name='delete_file'>Delete</button>
+                      </form>";
+
+                // Display download button
+                echo "<a href='download.php?file_id={$row['fileid']}&table=$table'><button>Download</button></a>";
+            } elseif ($table === 'externally_encrypted_files') {
+                // For externally_encrypted_files table, display Decrypt button
+                echo "<form method='get' action='decrypt.php' style='display:inline-block;'>";
                 echo "<input type='hidden' name='file_id' value='{$row['fileid']}' />";
-                echo "<button type='submit' name='delete_file'>Delete</button>";
+                echo "<input type='hidden' name='table_name' value='" . ($row['file_name'] && strpos($row['file_name'], '_en') !== false ? 'encrypted_files' : 'externally_encrypted_files') . "' />";
+                echo "<button type='submit' name='decrypt_file'>Decrypt</button>";
                 echo "</form>";
             } else {
+                // For other tables, assume encrypted_files or similar, display Decrypt and Download buttons
                 echo "<form method='get' action='decrypt.php' style='display:inline-block;'>
                         <input type='hidden' name='file_id' value='{$row['fileid']}' />
                         <button type='submit' name='decrypt_file'>Decrypt</button>
@@ -119,11 +134,14 @@ function displayFiles($conn, $table)
                 }
             }
 
-            echo "<form method='post' action='delete.php' style='display:inline-block;'>
-        <input type='hidden' name='file_id' value='{$row['fileid']}' />
-        <input type='hidden' name='table_name' value='{$table}' />
-        <button type='submit' name='delete_file'>Delete</button>
-      </form>";
+            // Display delete button for all tables except decrypted_files
+            if ($table !== 'decrypted_files') {
+                echo "<form method='post' action='delete.php' style='display:inline-block;'>
+                        <input type='hidden' name='file_id' value='{$row['fileid']}' />
+                        <input type='hidden' name='table_name' value='{$table}' />
+                        <button type='submit' name='delete_file'>Delete</button>
+                      </form>";
+            }
 
             echo "</td>";
             echo "</tr>";
@@ -134,4 +152,3 @@ function displayFiles($conn, $table)
         echo "No files found.";
     }
 }
-
