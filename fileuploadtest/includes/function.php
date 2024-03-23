@@ -1,18 +1,31 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 // Include the database connection
 include 'connection.php';
 
 function uploadFile()
 {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+    // include 'connection.php';
     // Set the target directory for uploaded files (modify as needed)
     $target_dir = "uploads/";
 
+    $directory = 'uploads/';
+
+    if (is_writable($directory)) {
+        echo "The directory is writable.";
+    } else {
+        echo "The directory is not writable.";
+    }
+
     // Check if form submission occurred (prevents unnecessary file checks)
-    if (isset($_POST["submit"])) {
+    if (isset ($_POST["submit"])) {
 
         // Get the file name and ensure it is not empty
         $fileName = $_FILES["fileToUpload"]["name"];
-        if (empty($fileName)) {
+        if (empty ($fileName)) {
             echo "<script>alert('Error: Please select a file to upload.');</script>";
             exit; // Terminate script execution
         }
@@ -63,6 +76,12 @@ function uploadFile()
             $params = array($userid, $fileName, $filePath, $uploadDate);
             pg_query_params($conn, $query, $params);
 
+            // if (!$tableName) {
+            //     $query = "INSERT INTO files (userid, file_name, file_path, upload_date) VALUES ($1, $2, $3, $4)";
+            //     $params = array($userid, $fileName, $filePath, $uploadDate);
+            //     pg_query_params($conn, $query, $params);
+            // }
+
             // Redirect or additional logic as needed...
 
         } else {
@@ -74,6 +93,8 @@ function uploadFile()
 // Function to fetch and display files for a given table
 function displayFiles($conn, $table)
 {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
     // Get the user ID from the session
     $user_id = $_SESSION['user_id'];
 
@@ -108,30 +129,31 @@ function displayFiles($conn, $table)
 
                 // Display download button
                 echo "<a href='download.php?file_id={$row['fileid']}&table=$table'><button>Download</button></a>";
-            } elseif ($table === 'externally_encrypted_files') {
-                // For externally_encrypted_files table, display Decrypt button
-                echo "<form method='get' action='decrypt.php' style='display:inline-block;'>";
-                echo "<input type='hidden' name='file_id' value='{$row['fileid']}' />";
-                echo "<input type='hidden' name='table_name' value='" . ($row['file_name'] && strpos($row['file_name'], '_en') !== false ? 'encrypted_files' : 'externally_encrypted_files') . "' />";
-                echo "<button type='submit' name='decrypt_file'>Decrypt</button>";
-                echo "</form>";
-            } else {
-                // For other tables, assume encrypted_files or similar, display Decrypt and Download buttons
+            } elseif ($table === 'encrypted_files') {
+                // For encrypted_files table, display Decrypt button
                 echo "<form method='get' action='decrypt.php' style='display:inline-block;'>
                         <input type='hidden' name='file_id' value='{$row['fileid']}' />
+                        <input type='hidden' name='table_name' value='{$table}' />
                         <button type='submit' name='decrypt_file'>Decrypt</button>
                       </form>";
+            } elseif ($table === 'externally_encrypted_files') {
+                // For externally_encrypted_files table, display Decrypt Externally button
+                echo "<form method='get' action='decrypt.php' style='display:inline-block;'>
+                        <input type='hidden' name='file_id' value='{$row['fileid']}' />
+                        <input type='hidden' name='table_name' value='{$table}' />
+                        <button type='submit' name='decrypt_file'>Decrypt Externally</button>
+                      </form>";
+            }
 
-                // Check if the file has been decrypted
-                $file_path = $row['file_path'];
-                $file_exists = file_exists($file_path);
+            // Check if the file has been decrypted
+            $file_path = $row['file_path'];
+            $file_exists = file_exists($file_path);
 
-                // Display download button if file has been decrypted, otherwise, disable it
-                if ($file_exists) {
-                    echo "<a href='download.php?file_id={$row['fileid']}&table=$table'><button>Download</button></a>";
-                } else {
-                    echo "<button disabled>Download</button>";
-                }
+            // Display download button if file has been decrypted, otherwise, disable it
+            if ($file_exists) {
+                echo "<a href='download.php?file_id={$row['fileid']}&table=$table'><button>Download</button></a>";
+            } else {
+                echo "<button disabled>Download</button>";
             }
 
             // Display delete button for all tables except decrypted_files

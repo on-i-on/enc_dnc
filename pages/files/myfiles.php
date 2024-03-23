@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 session_start();
 
 // Check if the user is not logged in, redirect to login page if not logged in
-if (!isset($_SESSION['user_id'])) {
+if (!isset ($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit;
 }
@@ -29,7 +29,7 @@ include_once '../../fileuploadtest/includes/function.php';
 
 <body>
     <h1>
-        <?php echo isset($_SESSION['user_name']) ? $_SESSION['user_name'] : ''; ?>
+        <?php echo isset ($_SESSION['user_name']) ? $_SESSION['user_name'] : ''; ?>
     </h1>
     <a href="../../fileuploadtest/index.php"><button>Home</button></a>
     <hr>
@@ -46,10 +46,15 @@ include_once '../../fileuploadtest/includes/function.php';
     <?php displayFiles($conn, "externally_encrypted_files"); ?><br><br>
     <hr>
     <h2>Upload Files</h2>
-    <form action="../../fileuploadtest/upload.php" method="post" enctype="multipart/form-data">
+    <!-- <form action="../../fileuploadtest/upload.php" method="post">
         Select file to upload:
         <input type="file" name="fileToUpload" id="fileToUpload" />
         <input type="submit" value="Upload File" name="submit" />
+    </form> -->
+    <form action="../../fileuploadtest/upload.php" method="post" enctype="multipart/form-data">
+        Select file to upload:
+        <input type="file" name="fileToUpload" id="fileToUpload">
+        <input type="submit" value="Upload File" name="submit">
     </form>
     <br>
 </body>
